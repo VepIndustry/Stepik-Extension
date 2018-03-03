@@ -15,15 +15,9 @@ let WebsiteDriver = {
     title: "Topics",
     "private": !1,
     checkContent: function (html) {
-        let isPassed = html.indexOf("❌") === -1;
-        let isNotStarted = html.indexOf("✅") === -1;
-        if (isPassed) {
-            return ConditionEnum.PASSED;
-        } else if (isNotStarted) {
-            return ConditionEnum.NOT_STARTED
-        } else {
-            return ConditionEnum.PASSING;
-        }
+        let countOfPassed = (html.match(/✅/g) || []).length;
+        let countOfNotPassed = (html.match(/❌/g) || []).length;
+        return countOfPassed / (countOfNotPassed + countOfPassed) * 100;
     },
     isModified: function (topicID) {
         let node = document.getElementById("topic" + topicID);
@@ -39,7 +33,7 @@ let WebsiteDriver = {
     getGraph: function () {
         return document.getElementById("graph-wrapper");
     },
-    setTopicStyle: function (topicID, condition) {
+    setTopicStyle: function (topicID, condition, postfix) {
         let node = document.getElementById("topic" + topicID);
         if (node === null) return;
 
@@ -50,6 +44,13 @@ let WebsiteDriver = {
         path.removeAttribute("class");
 
         path.classList.add(ConditionEnum.properties[condition].className);
+
+        let text = node.getElementsByTagName("text")[0];
+        if (text.getAttribute("old_html") === null) {
+            text.setAttribute("old_html", text.innerHTML);
+        }
+        text.innerHTML = text.getAttribute("old_html") + postfix;
+        //TODO Change size of node
         node.setAttribute("name", "modified");
     },
     getTopics: function () {
@@ -73,14 +74,23 @@ let Utils = {
     },
     updateTopic: function (topicID) {
         if (!WebsiteDriver.isModified(topicID)) {
-            WebsiteDriver.setTopicStyle(topicID, ConditionEnum.NONE);
+            WebsiteDriver.setTopicStyle(topicID, ConditionEnum.NONE, "");
         }
         let xhr = new XMLHttpRequest();
 
         xhr.onreadystatechange = function (ev) {
             if (xhr.readyState === 4 && xhr.status === 200) {
-                let condition = WebsiteDriver.checkContent(ev.target.response);
-                WebsiteDriver.setTopicStyle(topicID, condition);
+                let percent = WebsiteDriver.checkContent(ev.target.response);
+                switch (percent) {
+                    case 0:
+                        WebsiteDriver.setTopicStyle(topicID, ConditionEnum.NOT_STARTED, " 0%");
+                        break;
+                    case 100:
+                        WebsiteDriver.setTopicStyle(topicID, ConditionEnum.PASSED, " 100%");
+                        break;
+                    default:
+                        WebsiteDriver.setTopicStyle(topicID, ConditionEnum.PASSING, " " + percent.toFixed() + "%");
+                }
             }
         };
 
@@ -95,6 +105,6 @@ let Utils = {
         }
     },
     isGraphPage: function () {
-        return WebsiteDriver.getGraph() !== null;
+        return WebsiteDriver.getGraph() !== null;3
     }
 };

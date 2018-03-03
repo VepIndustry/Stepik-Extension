@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Stepik by Vep",
-  "version": "1.0",
+  "version": "1.1",
   "icons": {
     "48": "logo_48.png"
   },
