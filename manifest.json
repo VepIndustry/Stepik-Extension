@@ -14,7 +14,11 @@
         "https://alt.stepik.org/*",
         "http://alt.stepik.org/*"
       ],
+      "css": [
+        "styles/graph.css"
+      ],
       "js": [
+        "scripts/utils.js",
         "scripts/background.js"
       ]
     }

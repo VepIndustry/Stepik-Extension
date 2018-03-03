@@ -1,10 +1,3 @@
-function go_continue() {
-    let button = document.querySelector(".middle #continue_btn")
-    if (button !== null && button.innerText === "Continue") {
-        button.click();
-    }
-}
-
 //Тело всей страницы
 let body = document.getElementsByTagName("body")[0];
 
@@ -15,10 +8,24 @@ let config = {
     characterDataOldValue: true
 };
 
+let timerTopic = null;
+
 let body_observer = new MutationObserver(async function (mutations) {
-    body_observer.disconnect();
-    go_continue();
-    body_observer.observe(body, config);
+    if (Utils.isGraphPage()) {
+        if (timerTopic === null) {
+            Utils.updateTopics();
+            timerTopic = setInterval(Utils.updateTopics , 20000);
+        }
+    } else {
+        if (timerTopic !== null) {
+            clearInterval(timerTopic);
+            timerTopic = null;
+        }
+        Utils.go_continue();
+    }
 });
+
+Utils.updateTopics();
+timerTopic = setInterval(Utils.updateTopics, 20000);
 
 body_observer.observe(body, config);

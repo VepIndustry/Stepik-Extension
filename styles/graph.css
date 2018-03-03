@@ -1,0 +1,15 @@
+.passed {
+    fill: #B2E5B2;
+}
+
+.passing {
+    fill: #fbec5d;
+}
+
+.notStarted {
+    fill: #ee9086;
+}
+
+.none {
+    fill: white;
+}
