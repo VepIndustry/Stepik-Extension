@@ -11,8 +11,65 @@ let ConditionEnum = {
     }
 };
 
-let WebsiteDriver = {
-    title: "Topics",
+var GraphDriver = {
+    title: "GraphDriver",
+    "private": !1,
+    modifyPairs: function (node, lambda) {
+        let path = node.getElementsByTagName("path")[0];
+        if (path === null) return;
+        let d = path.getAttribute("d");
+        let pairs = d.match(/[-0123456789.]+,[-0123456789.]+/g);
+        let result = "";
+        for (let i = 0; i < pairs.length; i++) {
+            let or_x = parseFloat(pairs[i].match(/[-0123456789.]+/g)[0]);
+            let or_y = parseFloat(pairs[i].match(/[-0123456789.]+/g)[1]);
+            let pair = {"x": or_x, "y": or_y};
+            lambda(pair);
+            if (i === 0) {
+                result = "M" + pair["x"] + "," + pair["y"] + "C";
+            } else {
+                result += pair["x"] + "," + pair["y"] + " ";
+            }
+        }
+        path.setAttribute("d", result);
+    },
+    getCenterX: function (node) {
+        let text = node.getElementsByTagName("text")[0];
+        if (text === null) return 0;
+        return parseFloat(text.getAttribute("x"));
+    },
+    moveOn: function (node, x, y) {
+        GraphDriver.modifyPairs(node, function (pair) {
+            pair["x"] += x;
+            pair["y"] += y;
+        });
+    },
+    scaleX: function (node, percent, offset) {
+        let centerX = GraphDriver.getCenterX(node);
+        GraphDriver.modifyPairs(node, function (pair) {
+            let dif = (pair["x"] - centerX) * percent;
+            pair["x"] = dif + centerX + (dif < 0 ? -offset : offset);
+        });
+    },
+    getWidthOfText: function (node) {
+        let text = node.getElementsByTagName("text")[0];
+        if (text === null) return 0;
+        return text.getBoundingClientRect().width;
+    },
+    getWidthOfNode: function (node) {
+        let path = node.getElementsByTagName("path")[0];
+        if (path === null) return 0;
+        return path.getBoundingClientRect().width;
+    },
+    normalize: function (node) {
+        let widthOfNode = GraphDriver.getWidthOfNode(node);
+        let widthOfText = GraphDriver.getWidthOfText(node);
+        GraphDriver.scaleX(node, widthOfText / widthOfNode, 5);
+    }
+};
+
+var WebsiteDriver = {
+    title: "WebsiteDriver",
     "private": !1,
     checkContent: function (html) {
         let countOfPassed = (html.match(/✅/g) || []).length;
@@ -50,7 +107,7 @@ let WebsiteDriver = {
             text.setAttribute("old_html", text.innerHTML);
         }
         text.innerHTML = text.getAttribute("old_html") + postfix;
-        //TODO Change size of node
+        GraphDriver.normalize(node);
         node.setAttribute("name", "modified");
     },
     getTopics: function () {
@@ -105,6 +162,7 @@ let Utils = {
         }
     },
     isGraphPage: function () {
-        return WebsiteDriver.getGraph() !== null;3
+        return WebsiteDriver.getGraph() !== null;
+        3
     }
 };
