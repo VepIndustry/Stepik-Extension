@@ -45,10 +45,18 @@ var GraphDriver = {
         });
     },
     scaleX: function (node, percent, offset) {
+        //TODO convert percent to pixels and use it instead percent
         let centerX = GraphDriver.getCenterX(node);
+        let max = Number.MIN_VALUE;
         GraphDriver.modifyPairs(node, function (pair) {
-            let dif = (pair["x"] - centerX) * percent;
-            pair["x"] = dif + centerX + (dif < 0 ? -offset : offset);
+            if (max < pair["x"]) {
+                max = pair["x"];
+            }
+        });
+        let dif = (max - centerX) * (percent - 1) + offset;
+
+        GraphDriver.modifyPairs(node, function (pair) {
+            pair["x"] += (pair["x"] - centerX) < 0 ? -dif : dif;
         });
     },
     getWidthOfText: function (node) {
