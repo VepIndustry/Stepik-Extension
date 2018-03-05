@@ -82,7 +82,7 @@ var WebsiteDriver = {
     checkContent: function (html) {
         let countOfPassed = (html.match(/✅/g) || []).length;
         let countOfNotPassed = (html.match(/❌/g) || []).length;
-        return countOfPassed / (countOfNotPassed + countOfPassed) * 100;
+        return {"pass": countOfPassed, "all": countOfNotPassed + countOfPassed};
     },
     isModified: function (topicID) {
         let node = document.getElementById("topic" + topicID);
@@ -145,16 +145,14 @@ let Utils = {
 
         xhr.onreadystatechange = function (ev) {
             if (xhr.readyState === 4 && xhr.status === 200) {
-                let percent = WebsiteDriver.checkContent(ev.target.response);
-                switch (percent) {
-                    case 0:
-                        WebsiteDriver.setTopicStyle(topicID, ConditionEnum.NOT_STARTED, " 0%");
-                        break;
-                    case 100:
-                        WebsiteDriver.setTopicStyle(topicID, ConditionEnum.PASSED, " 100%");
-                        break;
-                    default:
-                        WebsiteDriver.setTopicStyle(topicID, ConditionEnum.PASSING, " " + percent.toFixed() + "%");
+                let rel = WebsiteDriver.checkContent(ev.target.response);
+                let str_rel = " " + rel["pass"] + "/" + rel["all"];
+                if (rel["pass"] === 0) {
+                    WebsiteDriver.setTopicStyle(topicID, ConditionEnum.NOT_STARTED, str_rel);
+                } else if (rel["pass"] === rel["all"]) {
+                    WebsiteDriver.setTopicStyle(topicID, ConditionEnum.PASSED, str_rel);
+                } else {
+                    WebsiteDriver.setTopicStyle(topicID, ConditionEnum.PASSING, str_rel);
                 }
             }
         };
